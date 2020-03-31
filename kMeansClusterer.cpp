@@ -8,20 +8,22 @@ using namespace std;
     vector<int *> histogramFeatures;
     int rows = 0;
     int cols = 0;
-
-
+   
     kMeansClusterer::kMeansClusterer(){}
     kMeansClusterer::~kMeansClusterer(){
             for(int i=0; i < images.size(); i++){
                delete [] images[i]; //delete pointers to images
             }
-       //delete [] images;
+
+            for(int i = 0; i < histogramFeatures.size(); i++){ //delete pointers to histograms, i.e. the image features
+                delete [] histogramFeatures[i];
+            }
+    
        cout << endl << "Cleaning up...\nMemory Freed!"<<endl; 
     }
 
     void kMeansClusterer::readPPMimages(const string folder){ //store image as a flattened 1D array in an array of pointers to each image
         cout << "\nLooking in the folder: ../"<<folder<< "/ for images."<<endl;
-        
         const string prefixes[10] = {"eight","five","four","nine", "one","seven","six","three", "two", "zero"};
        
         for(int i=0; i < sizeof(prefixes)/sizeof(prefixes[0]); i++){ //for each prefix i.e. 10
@@ -42,7 +44,6 @@ using namespace std;
                 input >>rows >> ws >> cols;
                 input >> end>>ws;
             
-            
                 u_char * imagePointer = new u_char[rows*cols*3]; //array of pointers to 1D array of each image
                 
                 input.read((char *)imagePointer, rows*cols*3); //read in all the data for one image and store in imagePointer
@@ -61,8 +62,6 @@ using namespace std;
 
     void kMeansClusterer::convertToGreyScale(){
        // cout<<images.size()<<endl;
-    
-       
        for(int j = 0; j < images.size(); j++ ){
             u_char * greyScaleImage = new u_char[rows*cols];
             int index = 0;
@@ -106,18 +105,15 @@ using namespace std;
             }
         }
     }
-
      void kMeansClusterer::generateHistograms(const int bin){
      //range of histogram is 0-255
      int intervals = 256/bin;
      cout <<"Intervals in histogram feature: " <<intervals<<", with bin size: "<<bin<<endl;
      int index = 0;
 
-     
-
      for (auto &&image : images) //for each image
      {
-         int * histogram = new int[intervals]; //new array to hold the histogram feature of each image
+         int * histogram = new int[intervals]{0}; //new array to hold the histogram feature of each image
 
          for(int i = 0; i < rows*cols; i++){ //loop through each 1D array which represents each greyscale image
 
@@ -126,25 +122,19 @@ using namespace std;
                  index = image[i]/bin; //calculate index of histogram array to increment
                  
                 }//end if
-               
-            }
-             if(index>0){
-                      cout << index << "-------"<<endl;
-                 }
+            } //end for
                 histogram[index]++; //increment the relevant index of the histogram
      } //end interation of image element
     
      histogramFeatures.push_back(histogram); //add corresponding histogram for each image
     }  //outer for auto   
 
-    int * hist = histogramFeatures[0];
-    for(int i =0; i < intervals; i++){
-        cout << i << " "<< hist[i];
-        for(int j = 0; j < hist[i]; j++){
-            cout<< "|";
-        }
-        cout << endl;
-    }
-
-    cout << histogramFeatures.size();
+    // int * hist = histogramFeatures[0];
+    // for(int i =0; i < intervals; i++){
+    //     cout << i<<" ";
+    //     for(int j = 0; j < hist[i]; j++){
+    //         cout<< "|";
+    //     }
+    //     cout << endl;
+    // }
  } //end void
