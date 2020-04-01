@@ -1,13 +1,22 @@
 #include "kMeansClusterer.h"
 
 #include <iostream>
+#include <map>
+#include <cmath>
 
 
 using namespace std; 
     vector <u_char *> images;
     vector<int *> histogramFeatures;
+    map<int, int *> clusters; //a cluster is map of a centroid to matching image deatures (histrograms in this case)
+
+    vector<int> * classification; // an array of vectors to hold the classification into clusters
+    
+
+
     int rows = 0;
     int cols = 0;
+    int intervals = 0;
    
     kMeansClusterer::kMeansClusterer(){}
     kMeansClusterer::~kMeansClusterer(){
@@ -18,6 +27,13 @@ using namespace std;
             for(int i = 0; i < histogramFeatures.size(); i++){ //delete pointers to histograms, i.e. the image features
                 delete [] histogramFeatures[i];
             }
+
+              for (auto &&pair : clusters)
+            {
+                delete [] pair.second; //delete the histogram to which the pointer points
+            }
+            
+            delete [] classification;
     
        cout << endl << "Cleaning up...\nMemory Freed!"<<endl; 
     }
@@ -107,7 +123,7 @@ using namespace std;
     }
      void kMeansClusterer::generateHistograms(const int bin){
      //range of histogram is 0-255
-     int intervals = 256/bin;
+     intervals = 256/bin;
      cout <<"Intervals in histogram feature: " <<intervals<<", with bin size: "<<bin<<endl;
      int index = 0;
 
@@ -138,3 +154,57 @@ using namespace std;
     //     cout << endl;
     // }
  } //end void
+
+ void kMeansClusterer::assignToCluster(){
+     //loop through all image histograms and find cluster with which it has smallest euclidean distance
+     double min = MAXFLOAT;
+     int index = 0;
+     int outerIndex = 0; //tracks the image number
+     double euclideanDistance = 0;
+     for (auto &&image : histogramFeatures)  //loop through the image histograms
+     {   
+          min = MAXFLOAT;
+         for (auto &&cluster : clusters) //compare each image histogram to each cluster
+         {  
+             euclideanDistance = 0.0;
+             for(int i = 0; i < intervals; i++){ //for each interval of each histogram
+             euclideanDistance += pow((cluster.second[i]-image[i]), 2); // (x-u)^2
+             }    
+             euclideanDistance = sqrt(euclideanDistance);  //the final euclidean distance which we wish to minimise for the cluster
+             if(euclideanDistance < min){
+                 min = euclideanDistance;
+                 index = cluster.first; // id of cluster is where we must assign the image
+             }     
+         } //we should have our desired cluster id at this point. i is in the range 0 - k
+         classification[index].push_back(outerIndex); //push image id on the the vector at the cluster id
+       outerIndex++;
+     }
+ }
+
+ void kMeansClusterer::createInitialClusters(const int k){ //creates random centroids initially for each cluster
+    classification = new vector<int>[k];
+
+    for(int i = 0; i < k; i++){
+        int * randomHistogram = new int[intervals];
+        int r = (rand()%100)+0;
+        
+        randomHistogram = histogramFeatures[r];
+        
+       
+        clusters.insert(pair<int , int *>(i, randomHistogram));
+        }
+       }
+
+
+ ostream& operator<<(ostream& os, const kMeansClusterer& kt){
+     cout << endl;
+     for(int i = 0; i < clusters.size(); i++){
+         cout <<"cluster "<<i<<": ";
+         for(int j = 0; j < classification[i].size(); j++){
+             cout << classification[i][j]<< " ";
+         }
+         cout << endl;
+     }
+ }
+
+ 

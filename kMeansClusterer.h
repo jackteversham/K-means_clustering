@@ -19,6 +19,10 @@ class kMeansClusterer{
     void writeToFile();
     void printImageGrid();
     void generateHistograms(const int bin);
+    void assignToCluster();
+    void createInitialClusters(const int k);
+   
+
 
 
     
