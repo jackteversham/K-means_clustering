@@ -39,6 +39,8 @@ int main(int argc, char** argv){
     kmClusterer.assignToCluster();
 
     cout << kmClusterer;
+
+    kmClusterer.recalculateCentroid();
     
     return 0;
 }

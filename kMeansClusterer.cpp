@@ -181,6 +181,33 @@ using namespace std;
      }
  }
 
+ void kMeansClusterer::recalculateCentroid(){
+     //calculate mean histogram of images incluster then assign to cluster
+
+     
+     int imagesInCluster = 0;
+
+     for (auto &&pair : clusters)
+     {
+         int * newCentroid = new int[intervals];
+         imagesInCluster = classification[pair.first].size(); //returns number of images in the cluster
+
+         for(int i = 0; i < imagesInCluster; i++){ //loop over each image in the cluster to get the mean
+            int imageIndex = classification[pair.first][i]; 
+            cout << imageIndex << " ";
+        
+
+         }
+         cout <<endl;
+         
+     }
+     
+
+
+
+
+ }
+
  void kMeansClusterer::createInitialClusters(const int k){ //creates random centroids initially for each cluster
     classification = new vector<int>[k];
 
@@ -188,9 +215,7 @@ using namespace std;
         int * randomHistogram = new int[intervals];
         int r = (rand()%100)+0;
         
-        randomHistogram = histogramFeatures[r];
-        
-       
+        randomHistogram = histogramFeatures[r]; //assign a random value in the data-set
         clusters.insert(pair<int , int *>(i, randomHistogram));
         }
        }
