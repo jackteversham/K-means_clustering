@@ -124,25 +124,49 @@ using namespace std;
     void kMeansClusterer::printImageGrid(){ //print grey scale images
         for (auto && image : images)
         { int length = rows*cols;
-            if(color)length = rows*cols*3;
+          int mod = 32;
+            if(color){length = rows*cols*3;
+                       mod = 32*3;}
             for(int i = 0; i < length; i++){
-                if (i%(32*3) == 0)cout << "\n";
+                if (i%mod == 0)cout << "\n";
                 cout << to_string(image[i]) <<" ";
             }
         }
     }
      void kMeansClusterer::generateHistograms(const int bin){
      //range of histogram is 0-255
+     
      intervals = 256/bin;
+     int length = rows*cols;
+     if(color){
+         intervals += 3; //1 columnn each for R, G, and B
+         length = rows*cols*3;
+         cout<<"Three columns added do histogram for R, G and B counts."<<endl;
+     }
      cout <<"Intervals in histogram feature: " <<intervals<<", with bin size: "<<bin<<endl;
      int index = 0;
 
      for (auto &&image : images) //for each image
      {
-         int * histogram = new int[intervals]{0}; //new array to hold the histogram feature of each image
+         int * histogram = new int[intervals]{0}; //new array to hold the histogram feature of each image, 3 more if RGB
+         if(color){
+             for(int i = 0; i < length; i++){ //loop through each 1D array which represents each greyscale image
+                 //increment RGB intensity totals accordingly
+                  //increment RGB intensity totals accordingly
+                 if((i%3)==0){ //R
+                     histogram[intervals-3]+=image[i]; //add intensity at i to the 3rd last index of histogram which represents RED
+                     //cout << histogram[intervals-3]<< " ";
+                 }else if((i%3)==1){ //G
+                     histogram[intervals-2]+=image[i]; //add intensity at i to the 2nd last index of histogram which represents GREEN
+                 }
+                 else if((i%3)==2){//B
+                     histogram[intervals-1]+=image[i]; //add intensity at i to the last index of histogram which represents BLUE
+                 }
+             }
+         } //end if(color)
 
-         for(int i = 0; i < rows*cols; i++){ //loop through each 1D array which represents each greyscale image
-
+         for(int i = 0; i < length; i++){ //loop through each 1D array which represents each greyscale image
+                
             for(int j = -1; j < 255; j+=bin){ //loop over intervals of intensity
                 if(j+1<= image[i]<=j+bin){ //if the image intensity lies within the range
                  index = image[i]/bin; //calculate index of histogram array to increment
@@ -155,14 +179,15 @@ using namespace std;
      histogramFeatures.push_back(histogram); //add corresponding histogram for each image
     }  //outer for auto   
 
-    int * hist = histogramFeatures[0];
-    for(int i =0; i < intervals; i++){
-        cout << i<<" ";
-        for(int j = 0; j < hist[i]; j++){
-            cout<< "|";
-        }
-        cout << endl;
-    }
+    // int * hist = histogramFeatures[42];
+    // int * hist2 = histogramFeatures[88];
+    // for(int i =0; i < intervals; i++){
+    //     cout << i<<" - "<<hist[i]<<" -- "<<hist2[i];
+    //     // for(int j = 0; j < hist[i]; j++){
+    //     //     cout<< "|";
+    //     // }
+    //     cout << endl;
+    // }
  } //end void
 
  void kMeansClusterer::assignToCluster(){
@@ -175,14 +200,18 @@ using namespace std;
      int index = 0;
      int outerIndex = 0; //tracks the image number
      double euclideanDistance = 0;
+     int startPoint = 0;
+     if(color)startPoint = intervals-3;
+
      for (auto &&image : histogramFeatures)  //loop through the image histograms
      {   
           min = MAXFLOAT;
          for (auto &&cluster : clusters) //compare each image histogram to each cluster
          {  
              euclideanDistance = 0.0;
-             for(int i = 0; i < intervals; i++){ //for each interval of each histogram
+             for(int i = startPoint; i < intervals; i++){ //for each interval of each histogram
              euclideanDistance += pow((cluster.second[i]-image[i]), 2); // (x-u)^2
+             
              }    
              euclideanDistance = sqrt(euclideanDistance);  //the final euclidean distance which we wish to minimise for the cluster
              if(euclideanDistance < min){
@@ -199,7 +228,8 @@ using namespace std;
      //calculate mean histogram of images incluster then assign to cluster
 
      int imagesInCluster = 0;
-
+     int startPoint = 0;
+     if(color)startPoint = intervals-3;
      for (auto &&pair : clusters)
      {    
          int * newCentroid = new int[intervals]{0}; //new array in memory to store cluster histogram
@@ -208,7 +238,7 @@ using namespace std;
          for(int i = 0; i < imagesInCluster; i++){ //loop over each image in the cluster to get the mean
             int imageIndex = classification[pair.first][i]; 
 
-            for(int j = 0; j < intervals; j++){ //find the mean of each interval of images in the cluster
+            for(int j = startPoint; j < intervals; j++){ //find the mean of each interval of images in the cluster
                 newCentroid[j] += histogramFeatures[imageIndex][j];
             }
          }
@@ -235,6 +265,36 @@ using namespace std;
         clusters.insert(pair<int , int *>(i, randomHistogram));
         }
        }
+
+ void kMeansClusterer::applyKernel(const int kernel[3][3]){ //must be applied on a grey scale image
+
+     for (auto &&image : images)
+     {
+         u_char image2D[rows+2][cols+2]; //hold image in 2D array form, with extra rows and columns for padding with zeros for boundary conditions
+         u_char * imageOutline = new u_char[rows*cols]; //holds the output
+
+         int index = 0;
+         for(int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++){
+                image2D[i][j] = image[index];
+                index++;
+                cout << to_string(image2D[i][j]);
+         }
+         cout << endl;
+         }
+
+
+         
+         int length = rows*cols;
+         for(int i = 0; i < length; i++){
+
+         }
+
+
+     }
+     
+
+ }
 
 
 ostream& operator<<(ostream& os, const kMeansClusterer& kt){

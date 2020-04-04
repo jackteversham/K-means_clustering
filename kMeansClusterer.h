@@ -24,6 +24,7 @@ class kMeansClusterer{
     void assignToCluster();
     void createInitialClusters(const int k);
     void recalculateCentroid();
+    void applyKernel(const int kernel[3][3]); //3x3 image kernel
     
    
 

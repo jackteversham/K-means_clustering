@@ -44,16 +44,20 @@ int main(int argc, char** argv){
     }
     
     //kmClusterer.writeToFile();
-    kmClusterer.printImageGrid();
+  //  kmClusterer.printImageGrid();
+
+  
     kmClusterer.generateHistograms(stoi(bin));
     kmClusterer.createInitialClusters(stoi(k));
     kmClusterer.assignToCluster();
 
    // cout << kmClusterer;
 
-    
+   //3x3 outline image kernel to highlight large differences in pixel values 
+   const int kernel[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}}; //outline image kernel
+   kmClusterer.applyKernel(kernel);
 
-    int iterations =1000;
+    int iterations =100;
 
     for(int i = 0; i < iterations; i ++){
     kmClusterer.recalculateCentroid();
@@ -61,6 +65,8 @@ int main(int argc, char** argv){
 
     }
     cout << kmClusterer;
+
+
 
    
 
