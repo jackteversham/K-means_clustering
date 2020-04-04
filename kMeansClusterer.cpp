@@ -3,6 +3,9 @@
 #include <iostream>
 #include <map>
 #include <cmath>
+#include <stdio.h> 
+#include <stdlib.h> 
+#include<time.h> 
 
 
 using namespace std; 
@@ -11,6 +14,9 @@ using namespace std;
     map<int, int *> clusters; //a cluster is map of a centroid to matching image deatures (histrograms in this case)
 
     vector<int> * classification; // an array of vectors to hold the classification into clusters
+    bool color;
+
+    const string prefixes[10] = {"eight","five","four","nine", "one","seven","six","three", "two", "zero"};
     
 
 
@@ -23,24 +29,27 @@ using namespace std;
             for(int i=0; i < images.size(); i++){
                delete [] images[i]; //delete pointers to images
             }
-
-            for(int i = 0; i < histogramFeatures.size(); i++){ //delete pointers to histograms, i.e. the image features
-                delete [] histogramFeatures[i];
-            }
-
               for (auto &&pair : clusters)
             {
                 delete [] pair.second; //delete the histogram to which the pointer points
             }
-            
+
+            for(int i = 0; i < histogramFeatures.size(); i++){ //delete pointers to histograms, i.e. the image features
+                delete [] histogramFeatures[i];
+            }
+        
             delete [] classification;
     
        cout << endl << "Cleaning up...\nMemory Freed!"<<endl; 
     }
 
+    void kMeansClusterer::setColor(const bool c){
+        color = c;
+    }
+
     void kMeansClusterer::readPPMimages(const string folder){ //store image as a flattened 1D array in an array of pointers to each image
         cout << "\nLooking in the folder: ../"<<folder<< "/ for images."<<endl;
-        const string prefixes[10] = {"eight","five","four","nine", "one","seven","six","three", "two", "zero"};
+        
        
         for(int i=0; i < sizeof(prefixes)/sizeof(prefixes[0]); i++){ //for each prefix i.e. 10
 
@@ -100,7 +109,7 @@ using namespace std;
     //             }
     //         cout <<counter<<endl;
     
-    //    }
+    //    
    
     }
      cout << "Images converted to grey scale"<<endl;
@@ -114,9 +123,10 @@ using namespace std;
 
     void kMeansClusterer::printImageGrid(){ //print grey scale images
         for (auto && image : images)
-        {
-            for(int i = 0; i < rows*cols; i++){
-                if (i%32 == 0)cout << "\n";
+        { int length = rows*cols;
+            if(color)length = rows*cols*3;
+            for(int i = 0; i < length; i++){
+                if (i%(32*3) == 0)cout << "\n";
                 cout << to_string(image[i]) <<" ";
             }
         }
@@ -145,18 +155,22 @@ using namespace std;
      histogramFeatures.push_back(histogram); //add corresponding histogram for each image
     }  //outer for auto   
 
-    // int * hist = histogramFeatures[0];
-    // for(int i =0; i < intervals; i++){
-    //     cout << i<<" ";
-    //     for(int j = 0; j < hist[i]; j++){
-    //         cout<< "|";
-    //     }
-    //     cout << endl;
-    // }
+    int * hist = histogramFeatures[0];
+    for(int i =0; i < intervals; i++){
+        cout << i<<" ";
+        for(int j = 0; j < hist[i]; j++){
+            cout<< "|";
+        }
+        cout << endl;
+    }
  } //end void
 
  void kMeansClusterer::assignToCluster(){
      //loop through all image histograms and find cluster with which it has smallest euclidean distance
+     for(int i = 0; i < clusters.size(); i++){
+         classification[i].clear(); //empty each cluster before reassigning
+     }
+
      double min = MAXFLOAT;
      int index = 0;
      int outerIndex = 0; //tracks the image number
@@ -184,52 +198,62 @@ using namespace std;
  void kMeansClusterer::recalculateCentroid(){
      //calculate mean histogram of images incluster then assign to cluster
 
-     
      int imagesInCluster = 0;
 
      for (auto &&pair : clusters)
-     {
-         int * newCentroid = new int[intervals];
+     {    
+         int * newCentroid = new int[intervals]{0}; //new array in memory to store cluster histogram
          imagesInCluster = classification[pair.first].size(); //returns number of images in the cluster
-
+    
          for(int i = 0; i < imagesInCluster; i++){ //loop over each image in the cluster to get the mean
             int imageIndex = classification[pair.first][i]; 
-            cout << imageIndex << " ";
-        
 
+            for(int j = 0; j < intervals; j++){ //find the mean of each interval of images in the cluster
+                newCentroid[j] += histogramFeatures[imageIndex][j];
+            }
          }
-         cout <<endl;
-         
-     }
+            for(int j = 0; j < intervals; j++){ //find the mean of each interval of images in the cluster
+                if(newCentroid[j] !=0)  newCentroid[j] = newCentroid[j]/imagesInCluster; //take the mean
+            }
+         delete [] pair.second; //delete pointer to old centroid
+         pair.second = newCentroid; //assign new centroid
+     } //end cluster loop
      
-
-
-
-
  }
 
  void kMeansClusterer::createInitialClusters(const int k){ //creates random centroids initially for each cluster
     classification = new vector<int>[k];
-
+    srand(time(0));
     for(int i = 0; i < k; i++){
         int * randomHistogram = new int[intervals];
-        int r = (rand()%100)+0;
         
-        randomHistogram = histogramFeatures[r]; //assign a random value in the data-set
+        int r = (rand()%100)+0;
+
+        for(int i = 0;i < intervals; i ++){ //TO PREVENT ALIASING OF MEMORY
+            randomHistogram[i] = histogramFeatures[r][i]; //assign a random value in the data-set
+        }
         clusters.insert(pair<int , int *>(i, randomHistogram));
         }
        }
 
 
- ostream& operator<<(ostream& os, const kMeansClusterer& kt){
-     cout << endl;
+ostream& operator<<(ostream& os, const kMeansClusterer& kt){
+     os << endl;
+     
      for(int i = 0; i < clusters.size(); i++){
-         cout <<"cluster "<<i<<": ";
+         os <<"cluster "<<i<<": ";
          for(int j = 0; j < classification[i].size(); j++){
-             cout << classification[i][j]<< " ";
+             for(int k = 0; k< 100; k++){ //print the necesarry prefix
+                if(k==classification[i][j]){
+                    int index = classification[i][j]/10;
+                    cout << prefixes[index]<< "_";
+                }
+             }
+             os << classification[i][j]%10<< "  ";
          }
-         cout << endl;
+         os << endl;
      }
+     return os;
  }
 
  

@@ -10,10 +10,12 @@ class kMeansClusterer{
     public:
     int rows, cols;
     vector <u_char *> images;
+    bool color;
  
 
     kMeansClusterer();
     ~kMeansClusterer();
+    void setColor(const bool c);
     void readPPMimages(const string folder);
     void convertToGreyScale();
     void writeToFile();
@@ -22,6 +24,7 @@ class kMeansClusterer{
     void assignToCluster();
     void createInitialClusters(const int k);
     void recalculateCentroid();
+    
    
 
 
