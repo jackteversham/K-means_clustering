@@ -66,24 +66,15 @@ int main(int argc, char** argv){
         kmClusterer.setColor(true);  //classifiy using RGB
        
     }
-
-    
-
   
     kmClusterer.generateHistograms(stoi(bin));
     kmClusterer.createInitialClusters(stoi(k));
     kmClusterer.assignToCluster();
-    
 
-   // cout << kmClusterer;
-
-
-    
     while(!kmClusterer.hasConverged()){ 
         kmClusterer.recalculateCentroid();
     kmClusterer.assignToCluster();
     
-
     }
     cout << kmClusterer;
 

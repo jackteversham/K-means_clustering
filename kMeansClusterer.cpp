@@ -87,11 +87,26 @@ using namespace std;
                 }
                 string start="";
                 string endline;
+                string comment;
                 int end = 0;
 
                 //Read header
                 input >> start >> ws;
-                input >>rows >> ws >> cols;
+                
+
+                while(1){
+                    getline(input,comment,'\n'); //potentially need to deal with a comment
+                    if(comment[0]=='#'){
+                        continue; //disregard comments
+                    }else{
+                        break;
+                    }
+                }
+                rows = stoi(comment.substr(0,2));
+                cols = stoi(comment.substr(3, 2));
+            
+
+               // input >>rows >> ws >> cols;
                 input >> end>>ws;
             
                 u_char * imagePointer = new u_char[rows*cols*3]; //array of pointers to 1D array of each image
