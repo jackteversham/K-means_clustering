@@ -13,7 +13,9 @@ int main(int argc, char** argv){
     kMeansClusterer kmClusterer;
     string bin = "1"; //defualt value
     string k = "10";
+    string output = "";
     bool color = false;
+    bool customFeature = false;
     for (int i = 0; i < argc; i++)
     {
         string str = "-bin";
@@ -28,47 +30,63 @@ int main(int argc, char** argv){
          if(argv[i] == str){
             color = true;
         }
+        str = "-f";
+        if(argv[i] == str){
+            customFeature = true;
+        }
+        str = "-o";
+        if(argv[i] == str){
+            output = argv[i+1];
+        }
        
     }
     
-    
-
-   
-
+    const int kernel[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}}; //outline image kernel
     kmClusterer.readPPMimages(folder);
 
     if(!color){
-        kmClusterer.convertToGreyScale();
+        kmClusterer.convertToGreyScale(); 
+
+         //3x3 outline image kernel to highlight large differences in pixel values
+      
+        //  kmClusterer.differenceMap(); 
+        //  kmClusterer.applyKernel(kernel);
+
+        //  kmClusterer.findDistanceBetweenExtremeMaximums();
+        // kmClusterer.printImageGrid();
+       
+
     }else{
         kmClusterer.setColor(true);  //classifiy using RGB
+       
     }
-    
-    //kmClusterer.writeToFile();
-  //  kmClusterer.printImageGrid();
 
   
     kmClusterer.generateHistograms(stoi(bin));
     kmClusterer.createInitialClusters(stoi(k));
     kmClusterer.assignToCluster();
+    
 
    // cout << kmClusterer;
 
-   //3x3 outline image kernel to highlight large differences in pixel values 
-   const int kernel[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}}; //outline image kernel
-   kmClusterer.applyKernel(kernel);
 
-    int iterations =100;
+    int iterations = 100; 
 
     for(int i = 0; i < iterations; i ++){
     kmClusterer.recalculateCentroid();
     kmClusterer.assignToCluster();
-
+    
     }
     cout << kmClusterer;
 
+    kmClusterer.writeToFile("out");
+    
+    ofstream ofs;
+    ofs.open(output+".txt");
+    ofs << kmClusterer;
+    ofs.close();
 
-
-   
+    cout << "\n\nClusters written to "<<output<<".txt, located in the src folder"<<endl;
 
     return 0;
 }
