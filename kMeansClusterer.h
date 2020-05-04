@@ -19,14 +19,15 @@ class kMeansClusterer{
     void readPPMimages(const string folder);
     void convertToGreyScale();
     void writeToFile(const string filename);
-    void printImageGrid();
+    void printImageGrid(const bool printOne);
     void generateHistograms(const int bin);
     void assignToCluster();
     void createInitialClusters(const int k);
     void recalculateCentroid();
     void applyKernel(const int kernel[3][3]); //3x3 image kernel
     void differenceMap();
-    int min(const int x, const int y);
+    int min(const int x, const int y) const;
+    string exec(const string command);
     void findDistanceBetweenExtremeMaximums();
     
    

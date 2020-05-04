@@ -5,7 +5,10 @@
 #include <cmath>
 #include <stdio.h> 
 #include <stdlib.h> 
-#include<time.h> 
+#include <time.h> 
+#include <sstream>
+#include <algorithm>
+#include <random>
 
 
 using namespace std; 
@@ -16,6 +19,8 @@ using namespace std;
     vector<int> * classification; // an array of vectors to hold the classification into clusters
     vector<u_char *> imageOutlines;
     vector<u_char *> differenceMaps;
+    vector<string> extractedNames;
+    
 
     double * distances;
     bool feature = false;
@@ -59,13 +64,22 @@ using namespace std;
 
     void kMeansClusterer::readPPMimages(const string folder){ //store image as a flattened 1D array in an array of pointers to each image
         cout << "\nLooking in the folder: ../"<<folder<< "/ for images."<<endl;
-        
-       
-        for(int i=0; i < sizeof(prefixes)/sizeof(prefixes[0]); i++){ //for each prefix i.e. 10
 
-            for(int k = 1; k<11; k++){ //for each sub_prefix
-               //int counter = 0;
-                ifstream input("../"+folder+"/"+prefixes[i]+"_"+to_string(k)+".ppm");
+        
+      
+        string fileNames = exec("ls ../"+folder);
+        stringstream ss(fileNames);
+        string token;
+        while(getline(ss, token, '\n')){
+            extractedNames.push_back(token);
+        }
+
+        auto rng = std::default_random_engine{};
+        shuffle(begin(extractedNames), end(extractedNames), rng);
+
+        for (auto &filename : extractedNames)
+        {
+            ifstream input("../"+folder+"/"+filename);
             
                 if(!input){
                    cout <<"fileNotFound"<<endl;
@@ -90,8 +104,9 @@ using namespace std;
                 //cout <<counter<<endl;
 
                 input.close(); //close input stream
-            }
+            
         }
+        
         cout << images.size()<<" images loaded in from file."<<endl;
     }
 
@@ -141,7 +156,7 @@ using namespace std;
          
     }
 
-    void kMeansClusterer::printImageGrid(){ //print grey scale images
+    void kMeansClusterer::printImageGrid(const bool printOne){ //print grey scale images
         for (auto && image : images)
         { int length = rows*cols;
           int mod = 32;
@@ -151,6 +166,8 @@ using namespace std;
                 if (i%mod == 0)cout << "\n";
                 cout << to_string(image[i]) <<" ";
             }
+            
+            if(printOne) break;
         }
     }
      void kMeansClusterer::generateHistograms(const int bin){
@@ -269,12 +286,35 @@ using namespace std;
  void kMeansClusterer::createInitialClusters(const int k){ //creates random centroids initially for each cluster
  //randomly assign an image ID 0-99 to a classification vector
     classification = new vector<int>[k]; //aray of k vectors, each vector holds to the ID of the images in the cluster
-    srand(time(0));
+    
+    vector<int> previousRandomNumbers;
+    bool unique = false;
+    
+    srand(time(NULL));
 
+
+    previousRandomNumbers.push_back(110); //just an inital value to compare to out of the range
+ 
     for(int i = 0; i < k; i++){
         int * randomHistogram = new int[intervals];
-        
-        int r = (rand()%100)+0;
+        int r;
+       unique = false;
+        while (!unique){ //while not unique
+            r = (rand()%100)+0; //generate new random number
+
+            int count = 0;
+            for (auto &i : previousRandomNumbers) //loop through the previous ones and check for duplicate
+            {
+                if(r == i){
+                    count ++; //count how many times the value appears in the data set.
+                }
+            }
+                if(count == 0){
+                    unique = true; //if r doesnt appear in previous random numbers, it is unique and stop loop
+            }
+        }
+         previousRandomNumbers.push_back(r); //r will be unique at this point
+
 
         for(int i = 0;i < intervals; i ++){ //TO PREVENT ALIASING OF MEMORY
             randomHistogram[i] = histogramFeatures[r][i]; //assign a random value in the data-set
@@ -456,11 +496,10 @@ using namespace std;
      
      double extremeDistance = sqrt(pow((maxX-minX), 2)+pow((maxY-minY),2));
      distances[counter] = extremeDistance;
-     //cout<<counter<<": "<<extremeDistance<<" ";
+     
      average += extremeDistance;
 
      if(counter%10 ==0 && counter>0){
-         cout << average/10<<endl;
          average = 0.0;
      }
      counter ++;
@@ -468,9 +507,30 @@ using namespace std;
  } //end outer for
  }
 
- int kMeansClusterer::min(const int x, const int y){
+ int kMeansClusterer::min(const int x, const int y) const{
      if(x<y) return x;
      return y;
+ }
+
+ string kMeansClusterer::exec(const string command){
+     //code credit to https://www.tutorialspoint.com/How-to-execute-a-command-and-get-the-output-of-command-within-Cplusplus-using-POSIX
+     char buffer[128];
+     string result = "";
+
+     //open pipe to file
+     FILE* pipe = popen(command.c_str(), "r");
+     if(!pipe){
+         return "failed to open pipe!";
+     }
+
+     //read till end of process:
+     while(!feof(pipe)){
+         //use buffer to read and add to result
+         if(fgets(buffer, 128, pipe)!=NULL)  result += buffer;
+           
+     }
+     pclose(pipe);
+     return result;     
  }
 
 
@@ -482,11 +542,12 @@ ostream& operator<<(ostream& os, const kMeansClusterer& kt){
          for(int j = 0; j < classification[i].size(); j++){
              for(int k = 0; k< 100; k++){ //print the necesarry prefix
                 if(k==classification[i][j]){
-                    int index = classification[i][j]/10;
-                    os << prefixes[index]<< "_";
+                    
+                    int index = classification[i][j];
+                    os << extractedNames[index].substr(0, extractedNames[index].length()- 4)<<"  ";
                 }
              }
-             os << classification[i][j]%10<< "  ";
+            // os << classification[i][j]%10<< "  ";
          }
          os << endl;
      }

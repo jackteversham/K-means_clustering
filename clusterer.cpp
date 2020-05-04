@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 
+
 #include "kMeansClusterer.cpp"
 
 using namespace std;
@@ -38,28 +39,35 @@ int main(int argc, char** argv){
         if(argv[i] == str){
             output = argv[i+1];
         }
+        
        
     }
-    
+
+    //3x3 outline image kernel to highlight large differences in pixel values
     const int kernel[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}}; //outline image kernel
     kmClusterer.readPPMimages(folder);
 
     if(!color){
         kmClusterer.convertToGreyScale(); 
-
-         //3x3 outline image kernel to highlight large differences in pixel values
+        
+        if(customFeature){
       
-        //  kmClusterer.differenceMap(); 
-        //  kmClusterer.applyKernel(kernel);
+         kmClusterer.differenceMap(); 
+         kmClusterer.applyKernel(kernel);
 
-        //  kmClusterer.findDistanceBetweenExtremeMaximums();
-        // kmClusterer.printImageGrid();
-       
+         kmClusterer.findDistanceBetweenExtremeMaximums();
+         const bool printOne = true;
+         kmClusterer.printImageGrid(printOne);
+
+        }
+
 
     }else{
         kmClusterer.setColor(true);  //classifiy using RGB
        
     }
+
+    
 
   
     kmClusterer.generateHistograms(stoi(bin));
@@ -87,6 +95,8 @@ int main(int argc, char** argv){
     ofs.close();
 
     cout << "\n\nClusters written to "<<output<<".txt, located in the src folder"<<endl;
+
+    
 
     return 0;
 }
