@@ -21,6 +21,7 @@ using namespace std;
     vector<u_char *> differenceMaps;
     vector<string> extractedNames;
     
+    bool converge = false;
 
     double * distances;
     bool feature = false;
@@ -65,7 +66,6 @@ using namespace std;
     void kMeansClusterer::readPPMimages(const string folder){ //store image as a flattened 1D array in an array of pointers to each image
         cout << "\nLooking in the folder: ../"<<folder<< "/ for images."<<endl;
 
-        
       
         string fileNames = exec("ls ../"+folder);
         stringstream ss(fileNames);
@@ -74,8 +74,9 @@ using namespace std;
             extractedNames.push_back(token);
         }
 
-        auto rng = std::default_random_engine{};
-        shuffle(begin(extractedNames), end(extractedNames), rng);
+        //the shuffle algorithm below was used to check if code worked when subjected to a random order or input files.
+        // auto rng = std::default_random_engine{};
+        // shuffle(begin(extractedNames), end(extractedNames), rng);
 
         for (auto &filename : extractedNames)
         {
@@ -87,7 +88,7 @@ using namespace std;
                 string start="";
                 string endline;
                 int end = 0;
-                
+
                 //Read header
                 input >> start >> ws;
                 input >>rows >> ws >> cols;
@@ -104,7 +105,6 @@ using namespace std;
                 //cout <<counter<<endl;
 
                 input.close(); //close input stream
-            
         }
         
         cout << images.size()<<" images loaded in from file."<<endl;
@@ -157,6 +157,11 @@ using namespace std;
     }
 
     void kMeansClusterer::printImageGrid(const bool printOne){ //print grey scale images
+
+         //the shuffle algorithm below was used to check if code worked when subjected to a random order or input files.
+        auto rng = std::default_random_engine{};
+        shuffle(begin(images), end(images), rng);
+        
         for (auto && image : images)
         { int length = rows*cols;
           int mod = 32;
@@ -256,12 +261,14 @@ using namespace std;
 
  void kMeansClusterer::recalculateCentroid(){
      //calculate mean histogram of images incluster then assign to cluster
-
+    int differencesBetweenCentroids = 0;
+     
      int imagesInCluster = 0;
      int startPoint = 0;
      int endPoint = intervals;
      if(color)startPoint = intervals-3;
      if(feature)endPoint = 1;
+     
      for (auto &&pair : clusters)
      {    
          int * newCentroid = new int[intervals]{0}; //new array in memory to store cluster histogram
@@ -277,11 +284,27 @@ using namespace std;
             for(int j = 0; j < endPoint; j++){ //find the mean of each interval of images in the cluster
                 if(newCentroid[j] !=0)  newCentroid[j] = newCentroid[j]/imagesInCluster; //take the mean
             }
+         for(int k = 0; k < endPoint; k++){ //compare new centroid to old one to check for convergance
+            if(pair.second[k]!=newCentroid[k]){
+                differencesBetweenCentroids++;
+            }
+         }
+          
+
          delete [] pair.second; //delete pointer to old centroid
          pair.second = newCentroid; //assign new centroid
      } //end cluster loop
+
+     if(differencesBetweenCentroids == 0){ //centroids no longer changing
+         converge = true;
+     }
      
  }
+ bool kMeansClusterer::hasConverged(){
+     return converge;
+ }
+
+ 
 
  void kMeansClusterer::createInitialClusters(const int k){ //creates random centroids initially for each cluster
  //randomly assign an image ID 0-99 to a classification vector

@@ -27,6 +27,7 @@ class kMeansClusterer{
     void applyKernel(const int kernel[3][3]); //3x3 image kernel
     void differenceMap();
     int min(const int x, const int y) const;
+    bool hasConverged();
     string exec(const string command);
     void findDistanceBetweenExtremeMaximums();
     

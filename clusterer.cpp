@@ -78,12 +78,12 @@ int main(int argc, char** argv){
    // cout << kmClusterer;
 
 
-    int iterations = 100; 
-
-    for(int i = 0; i < iterations; i ++){
-    kmClusterer.recalculateCentroid();
+    
+    while(!kmClusterer.hasConverged()){ 
+        kmClusterer.recalculateCentroid();
     kmClusterer.assignToCluster();
     
+
     }
     cout << kmClusterer;
 
