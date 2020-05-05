@@ -17,8 +17,7 @@ using namespace std;
     map<int, int *> clusters; //a cluster is map of a centroid to matching image features (histrograms in this case)
 
     vector<int> * classification; // an array of vectors to hold the classification into clusters
-    vector<u_char *> imageOutlines;
-    vector<u_char *> differenceMaps;
+  
     vector<string> extractedNames;
     
     bool converge = false;
@@ -42,14 +41,7 @@ using namespace std;
             {
                 delete [] pair.second; //delete the histogram to which the pointer points
             }
-              for (auto &&outline : imageOutlines)
-            {
-                delete [] outline; //delete the histogram to which the pointer points
-            }
-            //    for (auto &&differenceMap : differenceMaps)
-            // {
-            //     delete [] differenceMap; //delete the histogram to which the pointer points
-            // }
+            
             for(int i = 0; i < histogramFeatures.size(); i++){ //delete pointers to histograms, i.e. the image features
                 delete [] histogramFeatures[i];
             }
@@ -93,7 +85,6 @@ using namespace std;
                 //Read header
                 input >> start >> ws;
                 
-
                 while(1){
                     getline(input,comment,'\n'); //potentially need to deal with a comment
                     if(comment[0]=='#'){
@@ -114,11 +105,6 @@ using namespace std;
                 input.read((char *)imagePointer, rows*cols*3); //read in all the data for one image and store in imagePointer
                 images.push_back(imagePointer);
 
-                // for(int m =0; m< rows*cols*3; m++){
-                //     counter+=sizeof(imagePointer[m]);
-                // }
-                //cout <<counter<<endl;
-
                 input.close(); //close input stream
         }
         
@@ -126,7 +112,7 @@ using namespace std;
     }
 
     void kMeansClusterer::convertToGreyScale(){
-       // cout<<images.size()<<endl;
+      
        for(int j = 0; j < images.size(); j++ ){
             u_char * greyScaleImage = new u_char[rows*cols];
             int index = 0;
@@ -134,7 +120,7 @@ using namespace std;
        for(int i = 0; i < rows*cols*3; i+=3){
            u_char * imagePointers = images[j];
            greyScaleImage[index] =(u_char) 0.21*imagePointers[i]+0.72*imagePointers[i+1]+0.07*imagePointers[i+2];
-            //cout << to_string(greyScaleImage[index])<<" ";
+            
            index++;
           
        }
@@ -167,12 +153,10 @@ using namespace std;
             index ++;
             ofs.close();       
          }
-    
          
     }
 
     void kMeansClusterer::printImageGrid(const bool printOne){ //print grey scale images
-
          //the shuffle algorithm below was used to check if code worked when subjected to a random order or input files.
         auto rng = std::default_random_engine{};
         shuffle(begin(images), end(images), rng);
@@ -192,8 +176,6 @@ using namespace std;
     }
      void kMeansClusterer::generateHistograms(const int bin){
      //range of histogram is 0-255
-     
-     
      intervals = 256/bin;
      int length = rows*cols;
      if(color){
@@ -214,7 +196,7 @@ using namespace std;
                  //increment RGB intensity totals accordingly
                  if((i%3)==0){ //R
                      histogram[intervals-3]+=image[i]; //add intensity at i to the 3rd last index of histogram which represents RED
-                     //cout << histogram[intervals-3]<< " ";
+                    
                  }else if((i%3)==1){ //G
                      histogram[intervals-2]+=image[i]; //add intensity at i to the 2nd last index of histogram which represents GREEN
                  }
@@ -251,7 +233,9 @@ using namespace std;
      int outerIndex = 0; //tracks the image number
      double euclideanDistance = 0;
      int startPoint = 0;
+     int endpoint = intervals;
      if(color)startPoint = intervals-3;
+     if(feature)endpoint = 1;
 
      for (auto &&image : histogramFeatures)  //loop through the image histograms
      {   
@@ -322,7 +306,7 @@ using namespace std;
  
 
  void kMeansClusterer::createInitialClusters(const int k){ //creates random centroids initially for each cluster
- //randomly assign an image ID 0-99 to a classification vector
+    //randomly assign an image ID 0-99 to a classification vector
     classification = new vector<int>[k]; //aray of k vectors, each vector holds to the ID of the images in the cluster
     
     vector<int> previousRandomNumbers;
@@ -397,14 +381,14 @@ using namespace std;
                     }
                     
                   imageOutline[index] = output;     
-                  //cout << to_string(output)<<" ";    
+                  
                  }   
                 
                  index++;
          } //end cols
-        // cout<<endl;
+        
          }
-        // imageOutlines.push_back(imageOutline);
+        
         delete [] image;
         image = imageOutline;
       
@@ -433,10 +417,6 @@ using namespace std;
              for(int j = 0; j < c; j++){
                  differenceMap[index] = 0; // give value of zero on boundary conditions
                  if(i!=0 && i!=(rows-1) && j !=0 && j!=(c-1)){ //i.e. dont perform the calculation on the borders of the image, they're all zero anyway
-                    //subtract all neighbouring values in 3x3 grid to obtain the difference a value has with its neighbours
-                    // int output = image2D[i][j]- min(image2D[i-1][j-1],image2D[i][j])  +image2D[i][j]-  min(image2D[i-1][j],image2D[i][j])  +image2D[i][j]-  min(image2D[i-1][j+1],image2D[i][j] ) + min(image2D[i][j-1],image2D[i][j] ) 
-                    //            + image2D[i][j]- min(image2D[i][j+1],image2D[i][j] ) + image2D[i][j]- min(image2D[i+1][j-1],image2D[i][j] ) +
-                    //            image2D[i][j]-  min(image2D[i+1][j],image2D[i][j] ) +image2D[i][j]-  min(image2D[i+1][j+1],image2D[i][j]); 
                     int val = image2D[i][j];
                     u_char output = 0;
                     if(val != 0){
@@ -450,15 +430,11 @@ using namespace std;
                     }
                     //the higher the difference value, the more likely to be on a boundary, but != 0  
                   differenceMap[index] = output;   
-                 
                   
                  }   
                  index++;
          } //end cols
-         
-
          }
-   //   differenceMaps.push_back(differenceMap);
 
       delete [] image;
       image = differenceMap;
@@ -492,12 +468,12 @@ using namespace std;
      for(int i = 0; i < rows; i++){ //put in 2D array format for easy windoe passing
             for(int j = 0; j < cols; j++){
                 if(diff2D[i][j]>maxValue) maxValue = diff2D[i][j]; 
-               // cout<< maxValue<< " ";
+               
                 
          }//end for 
      } //end for
     
-    // cout <<endl;
+    
      //FIND X,Y VALUE OF EXTREME VALUES 
      double minDistance = MAXFLOAT;
      double maxDistance = -1.0;
@@ -585,7 +561,6 @@ ostream& operator<<(ostream& os, const kMeansClusterer& kt){
                     os << extractedNames[index].substr(0, extractedNames[index].length()- 4)<<"  ";
                 }
              }
-            // os << classification[i][j]%10<< "  ";
          }
          os << endl;
      }

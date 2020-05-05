@@ -2,7 +2,6 @@
 
 ## Unserpvised Image Classification using K-Means CLustering
 
-# How to run
 ## LOCATION OF DATASET NB
 Please note that when running, simply enter the name of the folder where the dataset is located as the first argument.
 My program will look for this folder in the directory above src.
@@ -14,7 +13,7 @@ E.g. if folder is called "dataset" then run using
 
 NOT:
 
-./clusterer ../dataset otherA rgs
+./clusterer ../dataset otherArgs
 
 ## To Compile
 
@@ -32,11 +31,37 @@ In the src folder, invoke the program as follows:
 
 ./clusterer <dataset> [-o output] [-k n] [-bin b] [-f] [-color]
 
-
-## clusterer.cpp
-
 ## Additional Feature
 
+For my additionaly feature I tried a combination of methods:
+
+- Firstly, I computed a difference map over all pixels of each image. Effectively, I iterated over each non-zero pixel and counted the number of neighbouring zeros in a 3x3 grid surrounding the pixel. The greater the number of neighbouring pixels, the more likely to be on a boundary and thus I could construct an outline.
+
+- Secondly, I used an image kernel which I passed over each grayscale image like a window moving average function. The image kernel was obtain from https://setosa.io/ev/image-kernels/.
+The specific kernel in question is one to emphasie the outline of the image.
+
+- After this I computed the distance between the maximum extremes (i.e. the terminal points of the images) for each image - theoretically this distance shouldn't change as the image terminates. This is the final single value per image that I used as my feature to cluster against.
+
+Implementation shown in the following methods in kMeansClusterer.cpp:
+
+void differenceMap();
+void applyKernel(const int kernal[3][3]);
+void findDistanceBetweenExtremeMaximums();
+
+All source code was original and implemented by me.
+Note that the feature is only implemented when -f flag is present and -color or NOT present.
+
+## Files
+
+## clusterer.cpp
+Contains the main entry point to the program and calls methods of the KMeansClusterer class implemented in kMeansCLusterer.cpp. Handles command line args
+
+
+## KMeansClusterer.cpp
+Contains all functionality of the KMeansClusterer class.
+
+## KMeansClusterer.h
+Contains the kMeansCLusterer class declaration and definition.
 
 
  

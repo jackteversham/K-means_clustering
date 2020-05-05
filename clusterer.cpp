@@ -78,16 +78,17 @@ int main(int argc, char** argv){
     }
     cout << kmClusterer;
 
-    kmClusterer.writeToFile("out");
-    
+    kmClusterer.writeToFile("out"); //writes grayscale PPM images
+
+    if(output != ""){
     ofstream ofs;
     ofs.open(output+".txt");
     ofs << kmClusterer;
     ofs.close();
 
     cout << "\n\nClusters written to "<<output<<".txt, located in the src folder"<<endl;
+    }
 
-    
 
     return 0;
 }
