@@ -27,6 +27,7 @@ In the src folder, invoke the program as follows:
 - n specifies the number of clusters
 - b specifies the bin interval size
 - invoke with -f flag to apply the additional feature (note this only takes affect without -color flag i.e. when grayscale)
+   --> When running with -f, an example image will be printed to demonstrate what the algorithm is doing
 - invoke with -color to apply clustering according to color feature
 
 ./clusterer <dataset> [-o output] [-k n] [-bin b] [-f] [-color]

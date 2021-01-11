@@ -173,6 +173,7 @@ using namespace std;
             
             if(printOne) break;
         }
+        cout << "\nImage above demonstrates the effect of the additional feature - note the high valued pixels on the outline\n See ../output/  for the new ppm output files and their cool outlines.";
     }
      void kMeansClusterer::generateHistograms(const int bin){
      //range of histogram is 0-255
@@ -299,7 +300,7 @@ using namespace std;
      }
      
  }
- bool kMeansClusterer::hasConverged(){
+ bool kMeansClusterer::hasConverged() const{
      return converge;
  }
 
