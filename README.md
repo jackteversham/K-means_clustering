@@ -15,6 +15,8 @@ NOT:
 
 ./clusterer ../dataset otherArgs
 
+Here the PPM images are located in the current directory and should be be removed into the above directory when running.
+
 ## To Compile
 
 cd to the src directory and type the command make
