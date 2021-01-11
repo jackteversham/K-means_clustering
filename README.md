@@ -1,6 +1,6 @@
-## README for CSC3022F Assignment 4
+## README
 
-## Unserpvised Image Classification using K-Means CLustering
+## Unsupervised Image Classification using K-Means CLustering
 
 ## LOCATION OF DATASET NB
 Please note that when running, simply enter the name of the folder where the dataset is located as the first argument.
